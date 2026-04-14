@@ -30,7 +30,6 @@ public partial class WineViewModel : ObservableValidator
     [ObservableProperty]
     [NotifyDataErrorInfo]
     [Required(ErrorMessage = "Name is required.")]
-    [MinLength(1, ErrorMessage = "Name cannot be empty.")]
     private string _name = string.Empty;
 
     [ObservableProperty]
