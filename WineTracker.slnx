@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WineTracker/WineTracker.csproj" />
+  <Project Path="WineTracker.Tests/WineTracker.Tests.csproj" />
+</Solution>

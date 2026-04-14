@@ -1,0 +1,114 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - 'feature/**'
+
+env:
+  MAJOR_VERSION: 1
+  MINOR_VERSION: 0
+
+jobs:
+  build-test-publish:
+    name: Build, Test & Publish
+    runs-on: windows-latest
+
+    permissions:
+      contents: read
+      checks: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Set version variables
+        id: version
+        shell: pwsh
+        run: |
+          $version = "${{ env.MAJOR_VERSION }}.${{ env.MINOR_VERSION }}.${{ github.run_number }}"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Computed version: $version"
+
+      - name: Restore dependencies
+        run: dotnet restore WineTracker.slnx
+
+      - name: Build
+        run: >
+          dotnet build WineTracker.slnx
+          --configuration Release
+          --no-restore
+          /p:Version=${{ steps.version.outputs.VERSION }}
+          /p:AssemblyVersion=${{ steps.version.outputs.VERSION }}
+          /p:FileVersion=${{ steps.version.outputs.VERSION }}
+          /bl:logs/build.binlog
+
+      - name: Run tests
+        id: test
+        run: >
+          dotnet test WineTracker.Tests/WineTracker.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit Test Results
+          path: TestResults/*.trx
+          reporter: dotnet-trx
+          fail-on-error: true
+
+      - name: Publish application
+        if: success()
+        run: >
+          dotnet publish WineTracker/WineTracker.csproj
+          --configuration Release
+          --no-build
+          --output publish
+          /p:Version=${{ steps.version.outputs.VERSION }}
+          /p:AssemblyVersion=${{ steps.version.outputs.VERSION }}
+          /p:FileVersion=${{ steps.version.outputs.VERSION }}
+
+      - name: Upload build artifacts (success)
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: WineTracker-${{ steps.version.outputs.VERSION }}
+          path: publish/
+          if-no-files-found: error
+
+      - name: Collect build logs on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $logDir = "failure-logs"
+          New-Item -ItemType Directory -Force -Path $logDir | Out-Null
+          # Copy binary build log if it was created
+          if (Test-Path "logs") {
+            Copy-Item -Recurse -Force logs $logDir/build-logs
+          }
+          # Copy test results if they exist
+          if (Test-Path "TestResults") {
+            Copy-Item -Recurse -Force TestResults $logDir/TestResults
+          }
+
+      - name: Upload logs and artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ steps.version.outputs.VERSION }}
+          path: failure-logs/
+          if-no-files-found: warn
