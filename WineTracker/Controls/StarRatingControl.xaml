@@ -1,0 +1,12 @@
+<UserControl x:Class="WineTracker.Controls.StarRatingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="Root">
+    <StackPanel Orientation="Horizontal">
+        <Button Style="{StaticResource StarButtonStyle}" Tag="1" Click="Star_Click" Content="{Binding Star1, ElementName=Root}" />
+        <Button Style="{StaticResource StarButtonStyle}" Tag="2" Click="Star_Click" Content="{Binding Star2, ElementName=Root}" />
+        <Button Style="{StaticResource StarButtonStyle}" Tag="3" Click="Star_Click" Content="{Binding Star3, ElementName=Root}" />
+        <Button Style="{StaticResource StarButtonStyle}" Tag="4" Click="Star_Click" Content="{Binding Star4, ElementName=Root}" />
+        <Button Style="{StaticResource StarButtonStyle}" Tag="5" Click="Star_Click" Content="{Binding Star5, ElementName=Root}" />
+    </StackPanel>
+</UserControl>

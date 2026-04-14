@@ -1,0 +1,273 @@
+<Window x:Class="WineTracker.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WineTracker.Controls"
+        xmlns:converters="clr-namespace:WineTracker.Converters"
+        xmlns:vm="clr-namespace:WineTracker.ViewModels"
+        Title="🍷 Wine Tracker"
+        MinWidth="760" MinHeight="500"
+        Width="960" Height="640"
+        Background="{StaticResource WineLightBrush}">
+
+    <Window.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisible" />
+        <converters:NullToVisibilityConverter x:Key="NullToCollapsed" Invert="True" />
+        <converters:StringToVisibilityConverter x:Key="StringToVisible" />
+        <converters:RatingToStarsConverter x:Key="RatingToStars" />
+        <converters:BoolInverterConverter x:Key="BoolInvert" />
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header Bar -->
+        <Border Grid.Row="0" Background="{StaticResource WineDarkBrush}" Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🍷" FontSize="22" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock Text="Wine Tracker"
+                               FontFamily="Segoe UI"
+                               FontSize="20" FontWeight="Bold"
+                               Foreground="White"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <!-- Search -->
+                <TextBox Grid.Column="1"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource SearchBoxStyle}"
+                         Width="200"
+                         VerticalAlignment="Center"
+                         Margin="0,0,12,0">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+
+                <!-- Add Wine -->
+                <Button Grid.Column="2"
+                        Content="+ Add Wine"
+                        Command="{Binding AddWineCommand}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="280" MinWidth="200" MaxWidth="400" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Wine List -->
+            <Grid Grid.Column="0" Background="White">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Sort toggle -->
+                <Border Grid.Row="0" Background="{StaticResource WineCardBrush}"
+                        BorderBrush="{StaticResource WineLightBrush}" BorderThickness="0,0,0,1"
+                        Padding="8,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Sort by: " FontFamily="Segoe UI" FontSize="11"
+                                   Foreground="{StaticResource WineMutedBrush}"
+                                   VerticalAlignment="Center" />
+                        <RadioButton Content="Name"
+                                     IsChecked="{Binding SortByRatingDescending, Converter={StaticResource BoolInvert}}"
+                                     FontFamily="Segoe UI" FontSize="11"
+                                     VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <RadioButton Content="Rating ↓"
+                                     IsChecked="{Binding SortByRatingDescending}"
+                                     FontFamily="Segoe UI" FontSize="11"
+                                     VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding FilteredWines}"
+                         SelectedItem="{Binding SelectedWine}"
+                         ItemContainerStyle="{StaticResource WineListItemStyle}"
+                         Background="White"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:WineViewModel}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0"
+                                           Text="{Binding Name}"
+                                           FontFamily="Segoe UI"
+                                           FontWeight="SemiBold"
+                                           FontSize="13"
+                                           TextTrimming="CharacterEllipsis" />
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Rating, Converter={StaticResource RatingToStars}}"
+                                               Foreground="{StaticResource WineAccentBrush}"
+                                               FontSize="12" />
+                                    <TextBlock Text=" · "
+                                               Foreground="{StaticResource WineMutedBrush}"
+                                               FontSize="12" />
+                                    <TextBlock Text="{Binding Winery}"
+                                               Foreground="{StaticResource WineMutedBrush}"
+                                               FontSize="12"
+                                               TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Empty state -->
+                <TextBlock Grid.Row="1"
+                           Text="No wines yet.&#x0a;Click &quot;+ Add Wine&quot; to get started."
+                           FontFamily="Segoe UI" FontSize="13"
+                           Foreground="{StaticResource WineMutedBrush}"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="16">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding FilteredWines.IsEmpty}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Grid>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"
+                          Background="{StaticResource WineLightBrush}" />
+
+            <!-- Right: Detail Panel -->
+            <Grid Grid.Column="2" Background="{StaticResource WineCardBrush}">
+
+                <!-- No selection placeholder -->
+                <TextBlock Text="Select a wine from the list."
+                           FontFamily="Segoe UI" FontSize="14"
+                           Foreground="{StaticResource WineMutedBrush}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding SelectedWine, Converter={StaticResource NullToCollapsed}}" />
+
+                <!-- Detail view -->
+                <ScrollViewer Visibility="{Binding SelectedWine, Converter={StaticResource NullToVisible}}"
+                              VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="28,24,28,24">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Title + Action buttons -->
+                        <Grid Grid.Row="0" Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding SelectedWine.Name}"
+                                       Style="{StaticResource TitleStyle}"
+                                       TextWrapping="Wrap" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                <Button Content="✏ Edit"
+                                        Command="{Binding EditWineCommand}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Margin="0,0,8,0" />
+                                <Button Content="🗑 Delete"
+                                        Command="{Binding DeleteWineCommand}"
+                                        Style="{StaticResource DangerButtonStyle}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Winery + City -->
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding SelectedWine.Winery}"
+                                       Style="{StaticResource SubtitleStyle}"
+                                       Visibility="{Binding SelectedWine.Winery, Converter={StaticResource StringToVisible}}" />
+                            <TextBlock Text=" · "
+                                       Style="{StaticResource SubtitleStyle}"
+                                       Visibility="{Binding SelectedWine.City, Converter={StaticResource StringToVisible}}" />
+                            <TextBlock Text="{Binding SelectedWine.City}"
+                                       Style="{StaticResource SubtitleStyle}"
+                                       Visibility="{Binding SelectedWine.City, Converter={StaticResource StringToVisible}}" />
+                        </StackPanel>
+
+                        <!-- Star Rating -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,4">
+                            <controls:StarRatingControl Rating="{Binding SelectedWine.Rating}"
+                                                        IsReadOnly="True" />
+                            <TextBlock Text="{Binding SelectedWine.Rating, StringFormat=' ({0}/5)'}"
+                                       Style="{StaticResource SubtitleStyle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Rating Description -->
+                        <TextBlock Grid.Row="3"
+                                   Text="{Binding SelectedWine.RatingDescription}"
+                                   FontFamily="Segoe UI" FontSize="13" FontStyle="Italic"
+                                   Foreground="{StaticResource WineMutedBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,14"
+                                   Visibility="{Binding SelectedWine.RatingDescription, Converter={StaticResource StringToVisible}}" />
+
+                        <Separator Grid.Row="4" Style="{StaticResource SeparatorStyle}" />
+
+                        <!-- Description -->
+                        <TextBlock Grid.Row="5"
+                                   Text="{Binding SelectedWine.Description}"
+                                   FontFamily="Segoe UI" FontSize="13"
+                                   Foreground="{StaticResource WineDarkBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,16"
+                                   Visibility="{Binding SelectedWine.Description, Converter={StaticResource StringToVisible}}" />
+
+                        <!-- Link -->
+                        <Border Grid.Row="6"
+                                Visibility="{Binding SelectedWine.Link, Converter={StaticResource StringToVisible}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔗 " VerticalAlignment="Center" />
+                                <TextBlock VerticalAlignment="Center">
+                                    <Hyperlink NavigateUri="{Binding SelectedWine.Link}"
+                                               Command="{Binding OpenLinkCommand}"
+                                               Foreground="{StaticResource WineRedBrush}">
+                                        <TextBlock Text="{Binding SelectedWine.Link}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="380" />
+                                    </Hyperlink>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

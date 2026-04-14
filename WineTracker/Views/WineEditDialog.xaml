@@ -1,0 +1,101 @@
+<Window x:Class="WineTracker.Views.WineEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:WineTracker.Controls"
+        xmlns:converters="clr-namespace:WineTracker.Converters"
+        Title="{Binding Title, RelativeSource={RelativeSource Self}}"
+        Width="480" SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource WineLightBrush}">
+
+    <Window.Resources>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibility" />
+        <Style TargetType="TextBlock" BasedOn="{StaticResource LabelStyle}" />
+    </Window.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                   Style="{StaticResource TitleStyle}"
+                   Margin="0,0,0,16" />
+
+        <!-- Form -->
+        <StackPanel Grid.Row="1">
+
+            <!-- Name -->
+            <TextBlock Text="NAME *" />
+            <TextBox x:Name="NameBox"
+                     Text="{Binding WineVm.Name, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}"
+                     Style="{StaticResource FormTextBoxStyle}" />
+            <TextBlock Text="{Binding (Validation.Errors)[0].ErrorContent, ElementName=NameBox}"
+                       Foreground="Red" FontSize="11"
+                       Visibility="{Binding (Validation.HasError), ElementName=NameBox,
+                                    Converter={StaticResource StringToVisibility}}" />
+
+            <!-- Winery -->
+            <TextBlock Text="WINERY" />
+            <TextBox Text="{Binding WineVm.Winery, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource FormTextBoxStyle}" />
+
+            <!-- City -->
+            <TextBlock Text="CITY" />
+            <TextBox Text="{Binding WineVm.City, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource FormTextBoxStyle}" />
+
+            <!-- Link -->
+            <TextBlock Text="LINK (URL)" />
+            <TextBox x:Name="LinkBox"
+                     Text="{Binding WineVm.Link, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource FormTextBoxStyle}" />
+            <TextBlock Text="Please enter a valid http/https URL."
+                       Foreground="Red" FontSize="11"
+                       Visibility="{Binding ShowLinkError, Converter={StaticResource StringToVisibility}}" />
+
+            <!-- Rating -->
+            <TextBlock Text="RATING" />
+            <controls:StarRatingControl Rating="{Binding WineVm.Rating, Mode=TwoWay}"
+                                        Margin="0,4,0,8" />
+
+            <!-- Rating Description -->
+            <TextBlock Text="RATING DESCRIPTION" />
+            <TextBox Text="{Binding WineVm.RatingDescription, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource FormTextBoxStyle}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="60"
+                     VerticalScrollBarVisibility="Auto" />
+
+            <!-- Description -->
+            <TextBlock Text="DESCRIPTION" />
+            <TextBox Text="{Binding WineVm.Description, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource FormTextBoxStyle}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="80"
+                     VerticalScrollBarVisibility="Auto" />
+
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="Cancel"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,0,8,0"
+                    Click="Cancel_Click" />
+            <Button Content="Save"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>
